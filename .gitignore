@@ -1,0 +1,6 @@
+ansible/vault.yml
+configs/**/*.txt
+configs/**/*.json
+*.pyc
+__pycache__/
+.env
