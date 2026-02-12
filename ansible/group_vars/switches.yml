@@ -1,0 +1,15 @@
+---
+# Variables specific to switches
+stp_mode: rapid-pvst
+
+# HQ L3 switch is STP root (priority 4096), branches are secondary (8192)
+# Set per-host in host_vars if needed; defaults to secondary
+stp_priority: 8192
+stp_vlans: "10,20,30,40"
+
+trunk_vlans: "10,20,30,40"
+portfast_default: true
+bpduguard_default: true
+
+etherchannel_mode: active   # LACP active
+etherchannel_group: 1

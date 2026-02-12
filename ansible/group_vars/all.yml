@@ -1,0 +1,27 @@
+---
+# Shared variables for all devices
+ntp_server: 10.0.40.10        # HQ NTP server (Server VLAN)
+domain_name: lab.local
+ssh_version: 2
+
+ospf_process_id: 1
+ospf_auth_key_id: 1
+ospf_auth_key: "{{ vault_ospf_md5_key }}"
+
+management_vlan: 10
+users_vlan: 20
+voice_vlan: 30
+servers_vlan: 40
+native_vlan: 99
+
+vlans:
+  - id: 10
+    name: Management
+  - id: 20
+    name: Users
+  - id: 30
+    name: Voice
+  - id: 40
+    name: Servers
+  - id: 99
+    name: Native
