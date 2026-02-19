@@ -1,0 +1,41 @@
+---
+- name: Configure NAT overload (PAT) on HQ router
+  hosts: hq-router
+  gather_facts: false
+
+  tasks:
+    - name: Create NAT ACL permitting RFC1918 space
+      cisco.ios.ios_config:
+        parents: "ip access-list standard {{ nat_acl_name }}"
+        lines:
+          - "permit 10.0.0.0 0.255.255.255"
+          - "permit 172.16.0.0 0.0.255.255"
+          - "permit 192.168.0.0 0.0.255.255"
+
+    - name: Configure NAT inside source (PAT overload)
+      cisco.ios.ios_config:
+        lines:
+          - "ip nat inside source list {{ nat_acl_name }} interface {{ nat_outside_int }} overload"
+
+    - name: Mark inside interfaces
+      cisco.ios.ios_config:
+        parents: "interface {{ nat_inside_int }}"
+        lines:
+          - "ip nat inside"
+
+    - name: Mark outside interface
+      cisco.ios.ios_config:
+        parents: "interface {{ nat_outside_int }}"
+        lines:
+          - "ip nat outside"
+
+    - name: Verify NAT configuration
+      cisco.ios.ios_command:
+        commands:
+          - "show ip nat translations"
+          - "show ip nat statistics"
+      register: nat_output
+
+    - name: Print NAT status
+      ansible.builtin.debug:
+        var: nat_output.stdout_lines
