@@ -1,0 +1,46 @@
+---
+- name: Configure OSPF MD5 authentication on all routers
+  hosts: routers
+  gather_facts: false
+
+  vars:
+    # Interface lists per device — override in host_vars as needed
+    ospf_interfaces:
+      hq-router:
+        - GigabitEthernet0/0   # WAN to Branch A
+        - GigabitEthernet0/1   # WAN to Branch B
+      branch-a-router:
+        - GigabitEthernet0/0   # WAN to HQ
+      branch-b-router:
+        - GigabitEthernet0/0   # WAN to HQ
+
+  tasks:
+    - name: Enable MD5 authentication on OSPF WAN interfaces
+      cisco.ios.ios_config:
+        parents: "interface {{ item }}"
+        lines:
+          - "ip ospf authentication message-digest"
+          - "ip ospf message-digest-key {{ ospf_auth_key_id }} md5 {{ ospf_auth_key }}"
+      loop: "{{ ospf_interfaces[inventory_hostname] }}"
+      no_log: true   # suppress key from logs
+
+    - name: Verify OSPF neighbor adjacencies
+      cisco.ios.ios_command:
+        commands: "show ip ospf neighbor"
+      register: ospf_neighbors
+
+    - name: Assert all neighbors are FULL
+      ansible.builtin.assert:
+        that:
+          - "'FULL' in ospf_neighbors.stdout[0]"
+        fail_msg: "OSPF neighbor not FULL on {{ inventory_hostname }} — check MD5 key consistency"
+        success_msg: "OSPF neighbors FULL on {{ inventory_hostname }}"
+
+    - name: Verify authentication type on interfaces
+      cisco.ios.ios_command:
+        commands: "show ip ospf interface"
+      register: ospf_int_output
+
+    - name: Print OSPF interface auth status
+      ansible.builtin.debug:
+        var: ospf_int_output.stdout_lines
