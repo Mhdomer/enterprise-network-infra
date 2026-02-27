@@ -1,0 +1,34 @@
+---
+# Security hardening — ACLs and AAA
+- name: Configure Management ACL (protect VTY access)
+  cisco.ios.ios_config:
+    parents: "ip access-list standard MGMT_VTY_ACCESS"
+    lines:
+      - "permit 172.16.0.0 0.0.0.255"
+      - "deny any log"
+
+- name: Apply Management ACL to VTY lines
+  cisco.ios.ios_config:
+    parents: "line vty 0 4"
+    lines:
+      - "access-class MGMT_VTY_ACCESS in"
+
+- name: Configure BLOCK_VOICE_TO_SERVERS ACL (applied at HQ L3 switch)
+  cisco.ios.ios_config:
+    parents: "ip access-list extended BLOCK_VOICE_TO_SERVERS"
+    lines:
+      - "deny ip 10.0.30.0 0.0.0.63 10.0.40.0 0.0.0.63"
+      - "deny ip 10.0.30.0 0.0.0.63 10.0.20.0 0.0.0.127"
+      - "permit ip any any"
+  when: inventory_hostname == 'hq-switch'
+
+- name: Configure USERS_TO_SERVERS ACL
+  cisco.ios.ios_config:
+    parents: "ip access-list extended USERS_TO_SERVERS"
+    lines:
+      - "permit tcp 10.0.20.0 0.0.0.127 10.0.40.0 0.0.0.63 eq 80"
+      - "permit tcp 10.0.20.0 0.0.0.127 10.0.40.0 0.0.0.63 eq 443"
+      - "permit udp 10.0.20.0 0.0.0.127 10.0.40.0 0.0.0.63 eq 53"
+      - "deny ip 10.0.20.0 0.0.0.127 10.0.30.0 0.0.0.63"
+      - "permit ip any any"
+  when: inventory_hostname == 'hq-switch'

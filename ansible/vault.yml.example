@@ -1,0 +1,5 @@
+# Copy this file to vault.yml and populate with real values
+# Then encrypt: ansible-vault encrypt ansible/vault.yml
+vault_device_password: "REPLACE_ME"
+vault_enable_password: "REPLACE_ME"
+vault_ospf_md5_key: "REPLACE_ME"

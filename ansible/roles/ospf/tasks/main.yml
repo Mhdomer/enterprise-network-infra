@@ -1,0 +1,30 @@
+---
+# OSPF multi-area configuration
+- name: Configure OSPF process and router ID
+  cisco.ios.ios_config:
+    parents: "router ospf {{ ospf_process_id }}"
+    lines:
+      - "router-id {{ ospf_router_id }}"
+      - "auto-cost reference-bandwidth 10000"
+      - "passive-interface default"
+
+- name: Activate OSPF on WAN interfaces (non-passive)
+  cisco.ios.ios_config:
+    parents: "router ospf {{ ospf_process_id }}"
+    lines:
+      - "no passive-interface GigabitEthernet0/0"
+  when: inventory_hostname in ['hq-router', 'branch-a-router', 'branch-b-router']
+
+- name: Configure ABR summarization on HQ router
+  cisco.ios.ios_config:
+    parents: "router ospf {{ ospf_process_id }}"
+    lines:
+      - "area 1 range 10.1.0.0 255.255.0.0"
+      - "area 2 range 10.2.0.0 255.255.0.0"
+  when: inventory_hostname == 'hq-router'
+
+- name: Set OSPF network statements
+  cisco.ios.ios_config:
+    parents: "router ospf {{ ospf_process_id }}"
+    lines: "{{ ospf_networks }}"
+  when: ospf_networks is defined

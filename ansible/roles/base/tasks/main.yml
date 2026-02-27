@@ -1,0 +1,53 @@
+---
+# Base hardening applied to every device
+- name: Set hostname
+  cisco.ios.ios_config:
+    lines:
+      - "hostname {{ inventory_hostname }}"
+
+- name: Disable CDP on WAN-facing interfaces
+  cisco.ios.ios_config:
+    parents: "interface GigabitEthernet0/0"
+    lines:
+      - "no cdp enable"
+
+- name: Enable SSH v2
+  cisco.ios.ios_config:
+    lines:
+      - "ip domain-name {{ domain_name }}"
+      - "ip ssh version {{ ssh_version }}"
+      - "ip ssh time-out 60"
+      - "ip ssh authentication-retries 3"
+
+- name: Harden VTY lines
+  cisco.ios.ios_config:
+    parents: "line vty 0 4"
+    lines:
+      - "login local"
+      - "transport input ssh"
+      - "exec-timeout 10 0"
+      - "logging synchronous"
+
+- name: Harden console line
+  cisco.ios.ios_config:
+    parents: "line console 0"
+    lines:
+      - "login local"
+      - "exec-timeout 10 0"
+      - "logging synchronous"
+
+- name: Disable unused services
+  cisco.ios.ios_config:
+    lines:
+      - "no service tcp-small-servers"
+      - "no service udp-small-servers"
+      - "no ip http server"
+      - "no ip http secure-server"
+      - "no ip finger"
+      - "no service finger"
+
+- name: Configure logging
+  cisco.ios.ios_config:
+    lines:
+      - "logging buffered 16384 informational"
+      - "service timestamps log datetime msec"
